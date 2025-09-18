@@ -1,0 +1,73 @@
+export interface PixDetails {
+  wk_instance_id: string
+  mod_multa: string | null
+  customer_state_code: string
+  customer_name2: string
+  status: string
+  f110_date: string
+  customer_number: string
+  customer_cpf: string
+  juros: string
+  doc_type: string
+  customer_cellphone: string
+  customer_fiscal_id: string
+  pix_key: string
+  date: string
+  bank_account: string
+  customer_district: string
+  accounting_doc_year: string
+  customer_cnpj: string
+  charge_datetime: string
+  send_email: string
+  customer_email: string
+  batch: string
+  branch_id: string
+  email_repre: string
+  row_id: string
+  accounting_doc: string
+  date_time: string
+  due_date: string
+  customer_zipcode: string
+  payer_request: string
+  charge_text: string
+  payment_type: string
+  id_f110: string
+  note: string
+  accounting_doc_item: string
+  dt_f110: string
+  sap_source_bank: string
+  wallet: string
+  multa: string
+  discount_percentage: string
+  discount_value: string
+  original_value: string
+  loc_id: boolean | false
+  company_code: string
+  customer_phone: string
+  our_number: string
+  bank_branch: string
+  status_qrcode: string
+  vbak_vbeln: string
+  accounting_doc_lc: string
+  dom_juros: string | null
+  customer_city: string
+  payment_code: string
+  customer_juridic_type: string
+  txid: string
+  customer_id: string
+  f110_id: string
+  bank_company: string
+  value: string
+  pix_id: string
+  dias_exp: string
+  total_discount_days: string
+  qr_expiration_secs: string
+  bank_num: string
+  customer_street: string
+  nf_number: string
+  customer_name: string
+  qr_code?: {
+    imagemQrcode: string
+    qrcode: string
+  }
+}

@@ -1,0 +1,439 @@
+import { PixDetails } from '@/types/pix-details'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { Button } from '@/components/ui/button'
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { toast } from 'sonner'
+import { 
+  User, 
+  CreditCard, 
+  MapPin, 
+  Phone, 
+  Mail, 
+  Calendar, 
+  DollarSign, 
+  Hash,
+  Building,
+  FileText,
+  Clock,
+  AlertCircle,
+  Copy,
+  Info
+} from 'lucide-react'
+import { format, parseISO } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+import { useState } from 'react'
+
+interface PixDetailsCardProps {
+  details: PixDetails
+}
+
+interface DetailedInfoDialogProps {
+  details: PixDetails
+}
+
+const formatCurrency = (value: string | number) => {
+  const numValue = typeof value === 'string' ? parseFloat(value) : value
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(numValue)
+}
+
+const formatDate = (dateString: string) => {
+  try {
+    const date = parseISO(dateString)
+    return format(date, 'dd/MM/yyyy', { locale: ptBR })
+  } catch {
+    return dateString
+  }
+}
+
+const formatDateTime = (dateString: string) => {
+  try {
+    const date = parseISO(dateString)
+    return format(date, 'dd/MM/yyyy às HH:mm', { locale: ptBR })
+  } catch {
+    return dateString
+  }
+}
+
+const getStatusColor = (status: string) => {
+  switch (status.toUpperCase()) {
+    case 'ATIVA':
+    case 'ATIVO':
+      return 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100'
+    case 'PAGO':
+    case 'CONCLUIDA':
+      return 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100'
+    case 'CANCELADO':
+    case 'CANCELADA':
+      return 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100'
+    case 'REJEITADO':
+    case 'REJEITADA':
+      return 'bg-red-100 text-red-800 border-red-200 hover:bg-red-100'
+    case 'EXPIRADO':
+    case 'EXPIRADA':
+      return 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-100'
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100'
+  }
+}
+
+const getBankName = (bankNum: string) => {
+  const bankMap: Record<string, string> = {
+    '001': 'Banco do Brasil',
+    '033': 'Banco Santander',
+    '104': 'Caixa Econômica Federal',
+    '237': 'Banco Bradesco',
+    '341': 'Banco Itaú',
+    '356': 'Banco Real',
+    '399': 'HSBC Bank Brasil',
+    '422': 'Banco Safra',
+    '655': 'Banco Votorantim',
+    '745': 'Banco Citibank'
+  }
+  return bankMap[bankNum] || `Banco ${bankNum}`
+}
+
+// Componente separado para o Dialog de informações detalhadas
+export function DetailedInfoDialog({ details }: DetailedInfoDialogProps) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="flex items-center gap-2">
+          <Info className="h-4 w-4" />
+          Ver Informações Detalhadas
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Informações Detalhadas
+          </DialogTitle>
+          <DialogDescription>
+            Informações técnicas e contábeis do PIX
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-4">
+          {/* Datas */}
+          <div className="space-y-3">
+            <h4 className="font-medium flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Datas e Prazos
+            </h4>
+            <div className="space-y-2 text-sm">
+              <div>
+                <span className="text-muted-foreground">Criação:</span>
+                <p>{formatDateTime(details.date_time)}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Vencimento:</span>
+                <p>{formatDate(details.due_date)}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Data F110:</span>
+                <p>{formatDate(details.f110_date)}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Dados Contábeis */}
+          <div className="space-y-3">
+            <h4 className="font-medium flex items-center gap-2">
+              <Hash className="h-4 w-4" />
+              Dados Contábeis
+            </h4>
+            <div className="space-y-2 text-sm">
+              <div>
+                <span className="text-muted-foreground">Doc. Contábil:</span>
+                <p>{details.accounting_doc}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Ano:</span>
+                <p>{details.accounting_doc_year}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Empresa:</span>
+                <p>{details.company_code}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Lote:</span>
+                <p>{details.batch}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Outros */}
+          <div className="space-y-3">
+            <h4 className="font-medium flex items-center gap-2">
+              <Building className="h-4 w-4" />
+              Outras Informações
+            </h4>
+            <div className="space-y-2 text-sm">
+              <div>
+                <span className="text-muted-foreground">Texto Cobrança:</span>
+                <p>{details.charge_text}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">NF:</span>
+                <p>{details.nf_number}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Tipo Pagamento:</span>
+                <p>{details.payment_type}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Enviar Email:</span>
+                <p>{details.send_email === 'X' ? 'Sim' : 'Não'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+export function PixDetailsCard({ details }: PixDetailsCardProps) {
+  const [copiedField, setCopiedField] = useState<string | null>(null)
+
+  const copyToClipboard = async (text: string, fieldName: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedField(fieldName)
+      toast.success(`${fieldName} copiado para área de transferência`)
+      setTimeout(() => setCopiedField(null), 2000)
+    } catch (error) {
+      toast.error('Erro ao copiar texto')
+    }
+  }
+
+  return (
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {/* Status e Valores */}
+      <Card className="md:col-span-2 lg:col-span-1">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5" />
+            Status e Valores
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Status:</span>
+            <Badge className={getStatusColor(details.status)}>
+              {details.status}
+            </Badge>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Status QR Code:</span>
+            <Badge className={getStatusColor(details.status_qrcode)}>
+              {details.status_qrcode}
+            </Badge>
+          </div>
+          
+          {/* QR Code */}
+          {details.qr_code?.imagemQrcode && (
+            <>
+              <Separator />
+              <div className="flex flex-col items-center space-y-3">
+                <h4 className="font-medium text-center">QR Code PIX</h4>
+                <div className="bg-white p-4 rounded-lg border shadow-sm">
+                  <img 
+                    src={details.qr_code.imagemQrcode}
+                    alt="QR Code PIX" 
+                    className="w-48 h-48 mx-auto"
+                  />
+                </div>
+                {details.qr_code.qrcode && (
+                  <div className="text-center space-y-2">
+                    <p className="text-xs text-muted-foreground">Código PIX:</p>
+                    <div className="bg-muted p-2 rounded text-xs font-mono break-all max-w-md">
+                      {details.qr_code.qrcode}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+          
+          <Separator />
+          
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Valor Original:</span>
+              <span className="font-semibold">{formatCurrency(details.original_value)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Valor Final:</span>
+              <span className="font-bold text-green-600 text-lg">{formatCurrency(details.value)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Desconto:</span>
+              <span className="text-blue-600">{formatCurrency(details.discount_value)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Multa:</span>
+              <span className="text-red-600">{formatCurrency(details.multa)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Juros:</span>
+              <span className="text-red-600">{formatCurrency(details.juros)}</span>
+            </div>
+          </div>
+          
+          {details.note && (
+            <>
+              <Separator />
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5" />
+                <div>
+                  <span className="text-sm font-medium">Observação:</span>
+                  <p className="text-sm text-muted-foreground">{details.note}</p>
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Dados do Cliente */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5" />
+            Dados do Cliente
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div>
+            <span className="text-sm text-muted-foreground">Nome:</span>
+            <p className="font-medium">{details.customer_name}</p>
+          </div>
+          
+          <div>
+            <span className="text-sm text-muted-foreground">Tipo:</span>
+            <p className="text-sm">{details.customer_juridic_type}</p>
+          </div>
+          
+          <div>
+            <span className="text-sm text-muted-foreground">Número Cliente:</span>
+            <p className="text-sm">{details.customer_number}</p>
+          </div>
+          
+          <div>
+            <span className="text-sm text-muted-foreground">CPF/CNPJ:</span>
+            <p className="text-sm">{details.customer_cpf || details.customer_cnpj}</p>
+          </div>
+          
+          <Separator />
+          
+          <div className="flex items-center gap-2">
+            <Mail className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm">{details.customer_email}</span>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Phone className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm">{details.customer_phone || details.customer_cellphone || 'Não informado'}</span>
+          </div>
+          
+          <div className="flex items-start gap-2">
+            <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+            <div className="text-sm">
+              <p>{details.customer_street}</p>
+              <p>{details.customer_district}</p>
+              <p>{details.customer_city} - {details.customer_state_code}</p>
+              <p>{details.customer_zipcode}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Dados Bancários e PIX */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Dados Bancários
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div>
+            <span className="text-sm text-muted-foreground">Banco:</span>
+            <p className="font-medium">{getBankName(details.bank_num)} ({details.bank_num})</p>
+          </div>
+          
+          <div>
+            <span className="text-sm text-muted-foreground">Agência:</span>
+            <p className="text-sm">{details.bank_branch}</p>
+          </div>
+          
+          <div>
+            <span className="text-sm text-muted-foreground">Conta:</span>
+            <p className="text-sm">{details.bank_account}</p>
+          </div>
+          
+          <Separator />
+          
+          <div>
+            <span className="text-sm text-muted-foreground">PIX Key:</span>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-mono break-all flex-1">{details.pix_key}</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => copyToClipboard(details.pix_key, 'PIX Key')}
+                className="h-6 w-6 p-0 flex-shrink-0"
+              >
+                <Copy className={`h-3 w-3 ${copiedField === 'PIX Key' ? 'text-green-600' : ''}`} />
+              </Button>
+            </div>
+          </div>
+          
+          <div>
+            <span className="text-sm text-muted-foreground">PIX ID:</span>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-mono break-all flex-1">{details.pix_id}</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => copyToClipboard(details.pix_id, 'PIX ID')}
+                className="h-6 w-6 p-0 flex-shrink-0"
+              >
+                <Copy className={`h-3 w-3 ${copiedField === 'PIX ID' ? 'text-green-600' : ''}`} />
+              </Button>
+            </div>
+          </div>
+          
+          <div>
+            <span className="text-sm text-muted-foreground">TXID:</span>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-mono break-all flex-1">{details.txid}</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => copyToClipboard(details.txid, 'TXID')}
+                className="h-6 w-6 p-0 flex-shrink-0"
+              >
+                <Copy className={`h-3 w-3 ${copiedField === 'TXID' ? 'text-green-600' : ''}`} />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
