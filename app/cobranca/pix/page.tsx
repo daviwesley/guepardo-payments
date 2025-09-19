@@ -267,9 +267,15 @@ export default function PixPage() {
               bank_name: getBankName(bankData.bank_num),
               // Se agrupado por banco, usar data inicial do range
               // Se não agrupado, usar a data específica do registro
-              date_from: groupByBank ? dateFrom : bankData.f110_date
+              date_from: groupByBank ? dateFrom : bankData.f110_date,
             })
-            
+
+            // Adicionar date_to e isGrouped quando estiver agrupado por banco
+            if (groupByBank) {
+              params.set('date_to', dateTo)
+              params.set('is_grouped', 'true')
+            }
+
             router.push(`/cobranca/pix/transacoes?${params.toString()}`)
           }}
         />

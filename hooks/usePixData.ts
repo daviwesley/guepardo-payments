@@ -215,7 +215,9 @@ export function usePixData(dateFrom?: string, dateTo?: string) {
       const pendingTransactions = processedResult.reduce((sum, item) => sum + item.active_count, 0)
       
       console.log(`📊 Dados finais: ${processedResult.length} registros dia/banco com transações`)
-      console.log(`� Total: R$ ${totalAmount.toLocaleString('pt-BR')}, ${totalTransactions} transações`)
+      console.log(
+        `� Total: R$ ${totalAmount.toLocaleString('pt-BR')}, ${totalTransactions} transações`
+      )
       
       setData(processedResult)
       setStats({

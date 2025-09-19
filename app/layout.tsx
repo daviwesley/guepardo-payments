@@ -5,6 +5,7 @@ import { AuthProvider } from '@/lib/auth-context'
 import LayoutWrapper from '@/components/layout-wrapper'
 import { ThemeProvider } from '@/components/theme-provider'
 import { AmplifyProvider } from '@/components/amplify-provider'
+import { StoreProvider } from '@/lib/stores'
 import { Toaster } from 'sonner'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -23,19 +24,19 @@ export default function RootLayout({
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={inter.className}>
         <AmplifyProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <AuthProvider>
-              <LayoutWrapper>
-                {children}
-              </LayoutWrapper>
-            </AuthProvider>
-            <Toaster />
-          </ThemeProvider>
+          <StoreProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <AuthProvider>
+                <LayoutWrapper>{children}</LayoutWrapper>
+              </AuthProvider>
+              <Toaster />
+            </ThemeProvider>
+          </StoreProvider>
         </AmplifyProvider>
       </body>
     </html>

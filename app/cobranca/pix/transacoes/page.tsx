@@ -15,6 +15,8 @@ function TransacoesContent() {
   const bankNum = searchParams.get('bank_num')
   const bankName = searchParams.get('bank_name')
   const dateFrom = searchParams.get('date_from')
+  const dateTo = searchParams.get('date_to')
+  const isGrouped = searchParams.get('is_grouped') === 'true'
 
   if (!bankNum || !bankName) {
     return (
@@ -43,33 +45,32 @@ function TransacoesContent() {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <nav className="flex items-center space-x-1 text-sm text-muted-foreground">
-        <Link 
-          href="/cobranca/pix" 
+        <Link
+          href="/cobranca/pix"
           className="hover:text-foreground transition-colors"
         >
           PIX
         </Link>
         <ChevronRight className="h-4 w-4" />
         <span className="text-foreground font-medium">
-          Transações - {bankName}
+          Transações - {bankName} {isGrouped ? '(Agrupado)' : ''}
         </span>
       </nav>
 
       {/* Botão voltar */}
       <div className="flex items-center gap-4">
-        <Button 
-          variant="outline" 
-          onClick={() => router.push('/cobranca/pix')}
-        >
+        <Button variant="outline" onClick={() => router.push('/cobranca/pix')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar para PIX
         </Button>
       </div>
-      
+
       <PixTransactionsList
         bankNum={bankNum}
         bankName={bankName}
         dateFrom={dateFrom || undefined}
+        dateTo={dateTo || undefined}
+        isGrouped={isGrouped}
       />
     </div>
   )

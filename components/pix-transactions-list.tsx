@@ -21,6 +21,8 @@ interface PixTransactionsListProps {
   bankNum: string
   bankName: string
   dateFrom?: string
+  dateTo?: string
+  isGrouped?: boolean
 }
 
 const getStatusColor = (status: string) => {
@@ -60,19 +62,23 @@ const formatDate = (dateString: string) => {
   }
 }
 
-export function PixTransactionsList({ 
-  bankNum, 
-  bankName, 
-  dateFrom
+export function PixTransactionsList({
+  bankNum,
+  bankName,
+  dateFrom,
+  dateTo,
+  isGrouped = false,
 }: PixTransactionsListProps) {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
-  
+
   const { data, loading, error, refetch } = usePixTransactions({
     bankNum,
     dateFrom,
-    enabled: true
+    dateTo,
+    enabled: true,
+    isGrouped,
   })
 
   // Filtrar e buscar transações
@@ -82,19 +88,21 @@ export function PixTransactionsList({
     // Filtro por busca (nome, CPF/CNPJ, email)
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase()
-      filtered = filtered.filter(transaction => 
-        transaction.customer_name.toLowerCase().includes(term) ||
-        transaction.customer_cpf.includes(term) ||
-        transaction.customer_cnpj.includes(term) ||
-        transaction.customer_email.toLowerCase().includes(term) ||
-        transaction.txid.toLowerCase().includes(term)
+      filtered = filtered.filter(
+        (transaction) =>
+          transaction.customer_name.toLowerCase().includes(term) ||
+          transaction.customer_cpf.includes(term) ||
+          transaction.customer_cnpj.includes(term) ||
+          transaction.customer_email.toLowerCase().includes(term) ||
+          transaction.txid.toLowerCase().includes(term)
       )
     }
 
     // Filtro por status
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(transaction => 
-        transaction.status.toUpperCase() === statusFilter.toUpperCase()
+      filtered = filtered.filter(
+        (transaction) =>
+          transaction.status.toUpperCase() === statusFilter.toUpperCase()
       )
     }
 
@@ -103,7 +111,7 @@ export function PixTransactionsList({
 
   // Obter lista única de status para o filtro
   const availableStatuses = useMemo(() => {
-    const statuses = Array.from(new Set(data.map(t => t.status)))
+    const statuses = Array.from(new Set(data.map((t) => t.status)))
     return statuses.sort()
   }, [data])
 
@@ -122,7 +130,7 @@ export function PixTransactionsList({
           </div>
           <Skeleton className="h-10 w-24" />
         </div>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="overflow-x-auto">
@@ -203,7 +211,9 @@ export function PixTransactionsList({
           <div className="text-center space-y-4">
             <div className="text-red-600">
               <FileText className="h-12 w-12 mx-auto mb-2" />
-              <h3 className="text-lg font-semibold">Erro ao carregar transações</h3>
+              <h3 className="text-lg font-semibold">
+                Erro ao carregar transações
+              </h3>
               <p className="text-sm text-muted-foreground">{error}</p>
             </div>
             <Button onClick={refetch} variant="outline">
@@ -223,7 +233,8 @@ export function PixTransactionsList({
         <div>
           <h2 className="text-2xl font-bold">Transações - {bankName}</h2>
           <p className="text-muted-foreground">
-            {filteredData.length} de {data.length} transação{data.length !== 1 ? 'ões' : ''} 
+            {filteredData.length} de {data.length} transação
+            {data.length !== 1 ? 'ões' : ''}
             {searchTerm || statusFilter !== 'all' ? ' (filtradas)' : ''}
           </p>
         </div>
@@ -246,7 +257,7 @@ export function PixTransactionsList({
             className="pl-10"
           />
         </div>
-        
+
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger>
             <Filter className="h-4 w-4 mr-2" />
@@ -254,7 +265,7 @@ export function PixTransactionsList({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos os status</SelectItem>
-            {availableStatuses.map(status => (
+            {availableStatuses.map((status) => (
               <SelectItem key={status} value={status}>
                 {status}
               </SelectItem>
@@ -271,18 +282,19 @@ export function PixTransactionsList({
               <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
               <div>
                 <h3 className="text-lg font-semibold">
-                  {data.length === 0 ? 'Nenhuma transação encontrada' : 'Nenhuma transação corresponde aos filtros'}
+                  {data.length === 0
+                    ? 'Nenhuma transação encontrada'
+                    : 'Nenhuma transação corresponde aos filtros'}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {data.length === 0 
+                  {data.length === 0
                     ? 'Não há transações para este banco no período selecionado.'
-                    : 'Tente ajustar os filtros de busca ou status.'
-                  }
+                    : 'Tente ajustar os filtros de busca ou status.'}
                 </p>
               </div>
               {(searchTerm || statusFilter !== 'all') && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setSearchTerm('')
                     setStatusFilter('all')
@@ -301,27 +313,43 @@ export function PixTransactionsList({
               <table className="w-full">
                 <thead className="border-b bg-muted/50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Banco</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Documento SAP</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Cliente</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Data</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Vencimento</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Valor</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Status QR Code</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">
+                      Banco
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">
+                      Documento SAP
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">
+                      Cliente
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">
+                      Data
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">
+                      Vencimento
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">
+                      Valor
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">
+                      Status QR Code
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredData.map((transaction) => (
-                    <tr 
+                    <tr
                       key={transaction.wk_instance_id}
                       className="border-b hover:bg-muted/30 cursor-pointer transition-colors"
                       onClick={() => handleCardClick(transaction.pix_id)}
                     >
                       <td className="px-4 py-3 text-sm">
                         <div className="flex items-center gap-2">
-                          <img 
-                            src={transaction.bank_image_url} 
+                          <img
+                            src={transaction.bank_image_url}
                             alt={transaction.bank_image_name}
                             className="w-6 h-6 rounded"
                             onError={(e) => {
@@ -329,7 +357,9 @@ export function PixTransactionsList({
                               target.style.display = 'none'
                             }}
                           />
-                          <span className="font-medium">{transaction.bank_num}</span>
+                          <span className="font-medium">
+                            {transaction.bank_num}
+                          </span>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-sm font-mono">
@@ -337,7 +367,9 @@ export function PixTransactionsList({
                       </td>
                       <td className="px-4 py-3 text-sm">
                         <div>
-                          <div className="font-medium">{transaction.customer_name}</div>
+                          <div className="font-medium">
+                            {transaction.customer_name}
+                          </div>
                           <div className="text-xs text-muted-foreground">
                             #{transaction.customer_number}
                           </div>
