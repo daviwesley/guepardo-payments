@@ -4,6 +4,12 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { usePixHistory } from '@/hooks/usePixHistory'
 import { PixHistoryList } from '@/components/pix-history-list'
 import { 
@@ -234,7 +240,7 @@ export function PixDetailsCard({ details }: PixDetailsCardProps) {
     <Tabs defaultValue="status" className="w-full max-w-full">
       <TabsList className="grid w-full grid-cols-4">
         <TabsTrigger value="status" className="text-xs sm:text-sm">
-          Status & QR
+          Status & QR Code
         </TabsTrigger>
         <TabsTrigger value="customer" className="text-xs sm:text-sm">
           Cliente
@@ -255,122 +261,166 @@ export function PixDetailsCard({ details }: PixDetailsCardProps) {
               Status e Valores
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Status:</span>
-              <Badge className={getStatusColor(details.status)}>
-                {details.status}
-              </Badge>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                Status QR Code:
-              </span>
-              <Badge className={getStatusColor(details.status_qrcode)}>
-                {details.status_qrcode}
-              </Badge>
-            </div>
-
-            <Separator />
-
-            {/* Layout com QR Code à direita */}
+          <CardContent>
+            {/* Grid de duas colunas: Status/Valores à esquerda, QR Code à direita */}
             <div className="grid gap-6 lg:grid-cols-2">
-              {/* Valores à esquerda */}
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    Valor Original:
-                  </span>
-                  <span className="font-semibold">
-                    {formatCurrency(details.original_value)}
-                  </span>
+              {/* Coluna esquerda: Status e Valores */}
+              <div className="space-y-4">
+                {/* Status */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Status:
+                    </span>
+                    <Badge className={getStatusColor(details.status)}>
+                      {details.status}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Status QR Code:
+                    </span>
+                    <Badge className={getStatusColor(details.status_qrcode)}>
+                      {details.status_qrcode}
+                    </Badge>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    Valor Final:
-                  </span>
-                  <span className="font-bold text-green-600 text-lg">
-                    {formatCurrency(details.value)}
-                  </span>
+
+                <Separator />
+
+                {/* Valores */}
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Valor Original:
+                    </span>
+                    <span className="font-semibold">
+                      {formatCurrency(details.original_value)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Valor Final:
+                    </span>
+                    <span className="font-bold text-green-600 text-lg">
+                      {formatCurrency(details.value)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Desconto:
+                    </span>
+                    <span className="text-blue-600">
+                      {formatCurrency(details.discount_value)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Multa:
+                    </span>
+                    <span className="text-red-600">
+                      {formatCurrency(details.multa)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Juros:
+                    </span>
+                    <span className="text-red-600">
+                      {formatCurrency(details.juros)}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    Desconto:
-                  </span>
-                  <span className="text-blue-600">
-                    {formatCurrency(details.discount_value)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Multa:</span>
-                  <span className="text-red-600">
-                    {formatCurrency(details.multa)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Juros:</span>
-                  <span className="text-red-600">
-                    {formatCurrency(details.juros)}
-                  </span>
-                </div>
+
+                {/* Observação */}
+                {details.note && (
+                  <>
+                    <Separator />
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5" />
+                      <div>
+                        <span className="text-sm font-medium">Observação:</span>
+                        <p className="text-sm text-muted-foreground">
+                          {details.note}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
-              {/* QR Code à direita */}
-              {details.qr_code?.imagemQrcode && (
-                <div className="flex flex-col items-center space-y-3">
-                  <h4 className="font-medium text-center">QR Code PIX</h4>
-                  <div className="bg-white p-3 rounded-lg border shadow-sm">
-                    <img
-                      src={details.qr_code.imagemQrcode}
-                      alt="QR Code PIX"
-                      className="w-32 h-32 lg:w-40 lg:h-40"
-                    />
+              {/* Coluna direita: QR Code */}
+              <div className="flex flex-col items-center justify-start space-y-4">
+                {details.qr_code?.imagemQrcode ? (
+                  <>
+                    <h4 className="font-medium text-center">QR Code PIX</h4>
+
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="bg-white p-3 rounded-lg border shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+                            <img
+                              src={details.qr_code.imagemQrcode}
+                              alt="QR Code PIX"
+                              className="w-40 h-40 lg:w-48 lg:h-48"
+                            />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side="bottom"
+                          className="max-w-xs p-4"
+                          sideOffset={10}
+                        >
+                          <div className="space-y-3">
+                            <p className="text-sm font-medium">Código PIX:</p>
+                            <div className="bg-muted p-2 rounded text-xs font-mono break-all max-h-24 overflow-y-auto">
+                              {details.qr_code.qrcode}
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                copyToClipboard(
+                                  details.qr_code!.qrcode,
+                                  'Código PIX'
+                                )
+                              }
+                              className="w-full flex items-center gap-2"
+                            >
+                              <Copy
+                                className={`h-3 w-3 ${copiedField === 'Código PIX' ? 'text-green-600' : ''}`}
+                              />
+                              Copiar Código PIX
+                            </Button>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        copyToClipboard(details.qr_code!.qrcode, 'Código QR')
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Copy
+                        className={`h-4 w-4 ${copiedField === 'Código QR' ? 'text-green-600' : ''}`}
+                      />
+                      Copiar QR
+                    </Button>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                    <div className="w-40 h-40 lg:w-48 lg:h-48 border-2 border-dashed rounded-lg flex items-center justify-center">
+                      <span className="text-sm">QR Code não disponível</span>
+                    </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      copyToClipboard(details.qr_code!.qrcode, 'Código QR')
-                    }
-                    className="flex items-center gap-2"
-                  >
-                    <Copy
-                      className={`h-4 w-4 ${copiedField === 'Código QR' ? 'text-green-600' : ''}`}
-                    />
-                    Copiar QR
-                  </Button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-
-            {/* Código PIX completo embaixo (se houver) */}
-            {details.qr_code?.qrcode && (
-              <>
-                <Separator />
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Código PIX:</p>
-                  <div className="bg-muted p-3 rounded text-sm font-mono break-all">
-                    {details.qr_code.qrcode}
-                  </div>
-                </div>
-              </>
-            )}
-
-            {details.note && (
-              <>
-                <Separator />
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5" />
-                  <div>
-                    <span className="text-sm font-medium">Observação:</span>
-                    <p className="text-sm text-muted-foreground">
-                      {details.note}
-                    </p>
-                  </div>
-                </div>
-              </>
-            )}
           </CardContent>
         </Card>
       </TabsContent>

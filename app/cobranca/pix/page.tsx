@@ -66,7 +66,10 @@ export default function PixPage() {
 
   console.log('🎯 API será chamada com:', { dateFrom, dateTo })
 
-  const { data, stats, loading, error } = usePixData(dateFrom, dateTo)
+  const { data, stats, loading, error, daysWithData } = usePixData(
+    dateFrom,
+    dateTo
+  )
 
   // Função para lidar com mudança de datas (só chamada quando popover fecha)
   const handleDateRangeChange = (newRange: DateRange | undefined) => {
@@ -274,6 +277,11 @@ export default function PixPage() {
             if (groupByBank) {
               params.set('date_to', dateTo)
               params.set('is_grouped', 'true')
+
+              // Adicionar dias com dados para otimização
+              if (daysWithData && daysWithData.length > 0) {
+                params.set('days_with_data', daysWithData.join(','))
+              }
             }
 
             router.push(`/cobranca/pix/transacoes?${params.toString()}`)

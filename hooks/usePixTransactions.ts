@@ -8,6 +8,7 @@ interface UsePixTransactionsParams {
   dateTo?: string
   enabled?: boolean
   isGrouped?: boolean
+  daysWithData?: string[] // Nova propriedade
 }
 
 export function usePixTransactions({
@@ -16,6 +17,7 @@ export function usePixTransactions({
   dateTo,
   enabled = true,
   isGrouped = false,
+  daysWithData, // Nova propriedade
 }: UsePixTransactionsParams) {
   const [data, setData] = useState<PixTransaction[]>([])
   const [loading, setLoading] = useState(false)
@@ -90,16 +92,34 @@ export function usePixTransactions({
 
     const startDate = parseISO(dateFrom)
     const endDate = parseISO(dateTo)
-    const daysInRange = eachDayOfInterval({ start: startDate, end: endDate })
+    let daysToQuery = eachDayOfInterval({ start: startDate, end: endDate })
 
-    if (daysInRange.length > 15) {
+    // 🎯 OTIMIZAÇÃO: Se temos informação dos dias com dados, usar apenas esses
+    if (daysWithData && daysWithData.length > 0) {
+      const daysWithDataAsStrings = daysWithData
+      daysToQuery = daysToQuery.filter((date) => {
+        const dateStr = format(date, 'yyyy-MM-dd')
+        return daysWithDataAsStrings.includes(dateStr)
+      })
+
+      console.log(
+        `🎯 OTIMIZAÇÃO: Filtrando dias. Total no período: ${eachDayOfInterval({ start: startDate, end: endDate }).length}, Com dados: ${daysToQuery.length}`
+      )
+      console.log(
+        `📅 Dias que serão consultados:`,
+        daysToQuery.map((d) => format(d, 'yyyy-MM-dd'))
+      )
+    }
+
+    // Limitar a 30 dias para evitar muitas requisições simultâneas
+    if (daysToQuery.length > 30) {
       throw new Error(
-        `Período muito longo: ${daysInRange.length} dias. Máximo permitido: 15 dias.`
+        `Período muito longo: ${daysToQuery.length} dias. Máximo permitido: 30 dias.`
       )
     }
 
     console.log(
-      `🚀 AGRUPAMENTO: Fazendo ${daysInRange.length} requisições paralelas para banco ${bankNum}`
+      `🚀 AGRUPAMENTO: Fazendo ${daysToQuery.length} requisições paralelas para banco ${bankNum}${daysWithData ? ' (otimizado)' : ''}`
     )
 
     const fetchDayTransactions = async (
@@ -114,7 +134,7 @@ export function usePixTransactions({
 
       try {
         console.log(
-          `📅 Buscando transações para ${dateStr} (${index + 1}/${daysInRange.length})`
+          `📅 Buscando transações para ${dateStr} (${index + 1}/${daysToQuery.length})`
         )
         const dayTransactions = await fetchTransactionsForSingleDate(
           bankNum,
@@ -131,7 +151,7 @@ export function usePixTransactions({
     }
 
     const allResults = await Promise.all(
-      daysInRange.map((date, index) => fetchDayTransactions(date, index))
+      daysToQuery.map((date, index) => fetchDayTransactions(date, index))
     )
 
     const allTransactions = allResults.flat()

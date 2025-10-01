@@ -5,15 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useRouter } from 'next/navigation'
-import { 
-  FileText, 
-  RefreshCw,
-  Search,
-  Filter
-} from 'lucide-react'
+import { FileText, RefreshCw, Search, Filter } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import Image from 'next/image'
 
@@ -23,6 +24,7 @@ interface PixTransactionsListProps {
   dateFrom?: string
   dateTo?: string
   isGrouped?: boolean
+  daysWithData?: string[] // Nova propriedade
 }
 
 const getStatusColor = (status: string) => {
@@ -50,7 +52,7 @@ const formatCurrency = (value: number | string) => {
   const numValue = typeof value === 'string' ? parseFloat(value) : value
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
-    currency: 'BRL'
+    currency: 'BRL',
   }).format(numValue)
 }
 
@@ -68,6 +70,7 @@ export function PixTransactionsList({
   dateFrom,
   dateTo,
   isGrouped = false,
+  daysWithData, // Nova propriedade
 }: PixTransactionsListProps) {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
@@ -79,6 +82,7 @@ export function PixTransactionsList({
     dateTo,
     enabled: true,
     isGrouped,
+    daysWithData, // Nova propriedade
   })
 
   // Filtrar e buscar transações

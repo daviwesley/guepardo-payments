@@ -17,6 +17,12 @@ function TransacoesContent() {
   const dateFrom = searchParams.get('date_from')
   const dateTo = searchParams.get('date_to')
   const isGrouped = searchParams.get('is_grouped') === 'true'
+  const daysWithDataParam = searchParams.get('days_with_data')
+
+  // Parse dos dias com dados
+  const daysWithData = daysWithDataParam
+    ? daysWithDataParam.split(',')
+    : undefined
 
   if (!bankNum || !bankName) {
     return (
@@ -71,6 +77,7 @@ function TransacoesContent() {
         dateFrom={dateFrom || undefined}
         dateTo={dateTo || undefined}
         isGrouped={isGrouped}
+        daysWithData={daysWithData}
       />
     </div>
   )
