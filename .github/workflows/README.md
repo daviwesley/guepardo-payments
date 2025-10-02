@@ -27,11 +27,21 @@ Para hospedar esta aplicação, use uma das seguintes plataformas que suportam S
 - Integração com AWS
 - Já está configurado no projeto
 
-## Para reativar GitHub Pages
+## Por que não usar GitHub Pages?
 
-Se quiser usar GitHub Pages, você precisará:
+Esta aplicação **NÃO é compatível** com GitHub Pages porque:
 
-1. Converter todas as rotas dinâmicas para estáticas
-2. Implementar `generateStaticParams()` em cada rota dinâmica
-3. Remover todas as chamadas de API em runtime
-4. Renomear os arquivos `.disabled` de volta para `.yml`
+1. **Autenticação dinâmica**: AWS Cognito requer runtime para validar tokens
+2. **Rotas dinâmicas**: `/cobranca/pix/detail/[pix_id]` com IDs desconhecidos em build time
+3. **Chamadas de API**: Todas as páginas fazem fetch de dados em runtime
+4. **Client-side rendering**: Hooks como `usePixData`, `usePixTransactions` são executados no cliente
+
+### Tentou implementar `generateStaticParams()`?
+
+Não funcionaria porque:
+- Não sabemos todos os `pix_id` possíveis em build time
+- Os dados mudam constantemente (novas transações PIX)
+- A API requer autenticação que expira
+- O período de datas é selecionado pelo usuário dinamicamente
+
+**Conclusão**: Esta é uma aplicação **SSR/ISR** que requer um servidor Node.js. Use Vercel, Railway, Render ou AWS Amplify.
